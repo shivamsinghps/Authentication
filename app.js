@@ -55,7 +55,7 @@ const password = req.body.password
 console.log("tt1");
 User.findOne({email:username},function(err,foundUser){
   if(err){
-    console.log(err)
+    console.log('err')
   }
   else
   {console.log("tt2");
@@ -63,6 +63,7 @@ User.findOne({email:username},function(err,foundUser){
      {console.log("tt3");
       res.render("secrets")
     }
+    else{console.log("not found")}
   }
 
 })
