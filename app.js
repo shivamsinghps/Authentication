@@ -4,6 +4,8 @@ const bodyParser = require('body-parser')
 const ejs = require('ejs')
 const mongoose = require('mongoose')
 const User = require('./Schemas/UserSchema.js')
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 
 
@@ -35,18 +37,19 @@ app.get('/register',(req,res)=>{
 })
 
 app.post('/register',(req,res)=>{
-  const newUser = new User({
-    email:req.body.username,
-    password: req.body.password
-  })
-
-  newUser.save(function(err){
-    if(err){
-      console.log(err);
-    }
-    else{
-    res.render("secrets")}
+  bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+    const newUser = new User({
+      email:req.body.username,
+      password: hash
     })
+    newUser.save(function(err){
+      if(err){
+        console.log(err);
+      }
+      else{
+      res.render("secrets")}
+      })
+});
 })
 
 app.post('/login',(req,res)=>{
@@ -58,12 +61,14 @@ User.findOne({email:username},function(err,foundUser){
     console.log('err')
   }
   else
-  {console.log("tt2");
-     if(foundUser.password === password)
-     {console.log("tt3");
-      res.render("secrets")
-    }
-    else{console.log("not found")}
+  {
+    bcrypt.compare(password, foundUser.password, function(err, result) {
+      if(result)
+       res.render("secrets")
+       else
+       console.log(err)
+     });
+
   }
 
 })
