@@ -63,6 +63,11 @@ app.get('/register',(req,res)=>{
   res.render("register")
 })
 
+app.get('/logout',(req,res)=>{
+  req.logout();
+  res.redirect('/')
+})
+
 app.post('/register',(req,res)=>{
 
   User.register({username:req.body.username},req.body.password,function(err,user){
@@ -95,6 +100,9 @@ app.post('/login',(req,res)=>{
       passport.authenticate("local")(req,res,function(){
         res.redirect('/secrets')
       })
+      // passport.authenticate('local', { successRedirect: '/secrets',
+      //                              failureRedirect: '/login',
+      //                            failureFlash: 'lololo.' })
     }
   })
 
