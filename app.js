@@ -5,11 +5,9 @@ const bodyParser = require('body-parser')
 const ejs = require('ejs')
 const mongoose = require('mongoose')
 const User = require('./Schemas/UserSchema.js')
-
 const session = require('express-session')
 const passport = require('passport')
-
-
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 
 app = express()
@@ -31,20 +29,48 @@ app.use(passport.session())
 mongoose.connect('mongodb://localhost:27017/my_database',{useNewUrlParser:true,useUnifiedTopology: true},()=>{
   console.log('Database Connected');
 });
-
 mongoose.set("useCreateIndex",true)
 
 passport.use(User.createStrategy());
 
 
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
 
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user) {
+    done(err, user);
+  });
+});
 
+passport.use(new GoogleStrategy({
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/google/secrets",
+    userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    console.log(profile);
+    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      return cb(err, user);
+    });
+  }
+));
 
 app.get('/',(req,res)=>{
   res.render("home")
 })
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile'] }));
+
+app.get('/auth/google/secrets',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect to the authorized page you want.
+    res.redirect('/secrets');
+  });
 
 app.get('/login',(req,res)=>{
   res.render("login")
@@ -100,13 +126,8 @@ app.post('/login',(req,res)=>{
       passport.authenticate("local")(req,res,function(){
         res.redirect('/secrets')
       })
-      // passport.authenticate('local', { successRedirect: '/secrets',
-      //                              failureRedirect: '/login',
-      //                            failureFlash: 'lololo.' })
     }
   })
-
-
 })
 
 app.listen(3000,()=>{
