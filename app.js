@@ -68,7 +68,7 @@ app.get('/auth/google',
 app.get('/auth/google/secrets',
   passport.authenticate('google', { failureRedirect: '/login' }),
   function(req, res) {
-    // Successful authentication, redirect to the authorized page you want.
+
     res.redirect('/secrets');
   });
 
@@ -77,11 +77,22 @@ app.get('/login',(req,res)=>{
 })
 
 app.get('/secrets',(req,res)=>{
+  User.find({"secret":{$ne:null}},(err,found_users)=>{
+    if(err)
+    console.log(err);
+    else{
+      res.render("secrets",{userswithsecret:found_users})
+    }
+  })
+})
+
+
+app.get('/submit',(req,res)=>{
   if (req.isAuthenticated()){
-    res.render('secrets')
+    res.render('submit')
   }
   else{
-    res.redirect('/')
+    res.redirect('/login')
   }
 })
 
@@ -92,6 +103,23 @@ app.get('/register',(req,res)=>{
 app.get('/logout',(req,res)=>{
   req.logout();
   res.redirect('/')
+})
+
+app.post('/submit',(req,res)=>{
+  var user_secret = req.body.secret
+  User.findById(req.user.id,function(err,founduser){
+    if(err){console.log(err)}
+    else{founduser.secret=user_secret
+         founduser.save((err)=>{
+           if(err)
+           console.log(err)
+           else{
+                 res.redirect('/secrets')
+           }
+         })
+      }
+
+  })
 })
 
 app.post('/register',(req,res)=>{

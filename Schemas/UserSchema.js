@@ -5,9 +5,10 @@ const passportLocalMongoose = require('passport-local-mongoose')
 const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema({
-  email:String,
-  password:String,
-  googleId:String
+  email:{type:String,require:false},
+  password:{type:String,require:false},
+  googleId:{type:String,require:false},
+  secret:{type:String,require:false}
 })
 
 userSchema.plugin(passportLocalMongoose)
